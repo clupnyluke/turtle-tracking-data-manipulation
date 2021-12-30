@@ -1,0 +1,5 @@
+node_modules
+dist
+.eslintrc.js
+npm_scripts
+.prettierrc.json

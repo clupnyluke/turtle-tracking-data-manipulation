@@ -1,0 +1,2 @@
+npx rollup --config rollup.config.ts --configPlugin typescript --watch &&
+npx eslint ./
