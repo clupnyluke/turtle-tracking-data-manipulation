@@ -7,27 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
 model node_ping_entries {
   node_id                String @db.VarChar
   tag_id                 String @db.VarChar
   signal_strength__rssi_ Int    @map("signal_strength_(rssi)")
-  epoch                  Int
-  unique_id              Int    @id(map: "node_ping_entries_pk")
+  timestamp              Int
+  id                     Int    @id(map: "node_ping_entries_pk")
   nodes                  nodes  @relation(fields: [node_id], references: [id], onDelete: Cascade, map: "node_ping_entries_fk")
   tags                   tags   @relation(fields: [tag_id], references: [id], onDelete: Cascade, map: "node_ping_entries_fk_1")
 }
 
 model nodes {
-  id                String              @id(map: "nodes_pk") @db.VarChar
-  latitiude         Float
-  longitude         Float
-  name              String?             @db.VarChar
-  node_ping_entries node_ping_entries[]
+  id                      String                    @id(map: "nodes_pk") @db.VarChar
+  latitiude               Float
+  longitude               Float
+  name                    String?                   @db.VarChar
+  data_and_node_relations data_and_node_relations[]
+  node_ping_entries       node_ping_entries[]
 }
 
 model tags {
   id                String              @id(map: "tags_pk") @db.VarChar
   animal_name       String?             @db.VarChar
+  computed_data     computed_data[]
   node_ping_entries node_ping_entries[]
+}
+
+model computed_data {
+  id                      Int                       @id(map: "computed_data_pk")
+  timestamp               Int?
+  tag_id                  String?                   @db.VarChar
+  latititude              Float?
+  longitude               Float?
+  possible_depth          Float?
+  tags                    tags?                     @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "computed_data_fk")
+  data_and_node_relations data_and_node_relations[]
+}
+
+model data_and_node_relations {
+  id            Int            @id(map: "data_and_node_relations_pk")
+  node_id       String?        @db.VarChar
+  data_id       Int?
+  computed_data computed_data? @relation(fields: [data_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "data_and_node_relations_fk_1")
+  nodes         nodes?         @relation(fields: [node_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "data_and_node_relations_fk")
 }
