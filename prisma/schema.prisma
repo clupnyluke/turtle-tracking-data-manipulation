@@ -8,22 +8,22 @@ datasource db {
 }
 
 model node_ping_entries {
-  node_id                String @db.VarChar
-  tag_id                 String @db.VarChar
-  signal_strength__rssi_ Int    @map("signal_strength_(rssi)")
-  timestamp              Int
-  id                     Int    @id(map: "node_ping_entries_pk")
-  nodes                  nodes  @relation(fields: [node_id], references: [id], onDelete: Cascade, map: "node_ping_entries_fk")
-  tags                   tags   @relation(fields: [tag_id], references: [id], onDelete: Cascade, map: "node_ping_entries_fk_1")
+  node_id                 String                    @db.VarChar
+  tag_id                  String                    @db.VarChar
+  signal_strength__rssi_  Int                       @map("signal_strength_(rssi)")
+  timestamp               Int
+  id                      Int                       @id(map: "node_ping_entries_pk")
+  nodes                   nodes                     @relation(fields: [node_id], references: [id], onDelete: Cascade, map: "node_ping_entries_fk")
+  tags                    tags                      @relation(fields: [tag_id], references: [id], onDelete: Cascade, map: "node_ping_entries_fk_1")
+  data_and_node_relations data_and_node_relations[]
 }
 
 model nodes {
-  id                      String                    @id(map: "nodes_pk") @db.VarChar
-  latitiude               Float
-  longitude               Float
-  name                    String?                   @db.VarChar
-  data_and_node_relations data_and_node_relations[]
-  node_ping_entries       node_ping_entries[]
+  id                String              @id(map: "nodes_pk") @db.VarChar
+  latitiude         Float
+  longitude         Float
+  name              String?             @db.VarChar
+  node_ping_entries node_ping_entries[]
 }
 
 model tags {
@@ -34,8 +34,7 @@ model tags {
 }
 
 model computed_data {
-  id                      Int                       @id(map: "computed_data_pk")
-  timestamp               Int?
+  timestamp               Int                       @id(map: "computed_data_pk")
   tag_id                  String?                   @db.VarChar
   latititude              Float?
   longitude               Float?
@@ -45,9 +44,9 @@ model computed_data {
 }
 
 model data_and_node_relations {
-  id            Int            @id(map: "data_and_node_relations_pk")
-  node_id       String?        @db.VarChar
-  data_id       Int?
-  computed_data computed_data? @relation(fields: [data_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "data_and_node_relations_fk_1")
-  nodes         nodes?         @relation(fields: [node_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "data_and_node_relations_fk")
+  id                Int                @id(map: "data_and_node_relations_pk")
+  entry_id          Int?
+  timestamp         Int?
+  node_ping_entries node_ping_entries? @relation(fields: [entry_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "data_and_node_relations_fk")
+  computed_data     computed_data?     @relation(fields: [timestamp], references: [timestamp], onDelete: NoAction, onUpdate: NoAction, map: "data_and_node_relations_fk_1")
 }
