@@ -12,6 +12,7 @@ export default () => {
             file: "dist/main.js",
             format: "cjs", //common js output
         },
+        preferBuiltins: true,
         plugins: [
             nodeResolve({ exportConditions: ["node"] }),
             commonjs(),
