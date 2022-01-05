@@ -63,7 +63,8 @@ const main = async () => {
             timestamp: true,
         },
     });
-    const latestComputedDataTimestamp = queryResult._max.timestamp ?? 0;
+    const maxTimestamp = queryResult._max.timestamp ?? 0;
+    const latestComputedDataTimestamp = maxTimestamp + 3;
 
     // next block just keeps the ids from conflicting by taking the largest
     // ID in database
