@@ -76,7 +76,9 @@ const main = async () => {
                     id: true,
                 },
             });
-        relationIdCount = currentRelationIdCount._max.id ?? 0;
+        if (currentRelationIdCount._max.id !== null) {
+            relationIdCount = currentRelationIdCount._max.id + 1;
+        }
     } catch (err) {
         console.error(
             `RETRIEVAL OF MAX RELATION DATA ID FAILED\nERROR: ${err}`
