@@ -3,6 +3,7 @@ import latlonEllipsoidal, {
     Cartesian,
 } from "geodesy/latlon-ellipsoidal";
 import {
+    computed_data,
     data_and_node_relations,
     nodes,
     node_ping_entries,
@@ -10,6 +11,7 @@ import {
     tags,
 } from ".prisma/client";
 import LM from "ml-levenberg-marquardt";
+import ProgressBar from "progress";
 
 const prisma = new PrismaClient();
 
@@ -155,7 +157,13 @@ const main = async () => {
             evaluations.set(key, val);
         });
 
+        const newComputedDataArray: computed_data[] = [];
+        const relationData: data_and_node_relations[] = [];
+
         // loop to generate the data
+        const progress = new ProgressBar(":bar :percent :eta", {
+            total: evaluations.size,
+        });
         for (const evaluation of evaluations.entries()) {
             // the evalArr contains every node entry related to the timestamp
             const [timestamp, evalArr] = evaluation;
@@ -175,8 +183,6 @@ const main = async () => {
             // output will always be 0 as we are trying to find the least incorrect
             // guess
             const indices: number[] = [];
-
-            const relationData: data_and_node_relations[] = [];
 
             for (const evalEntry of evalArr) {
                 // These A and B numbers were generated using another script of mine
@@ -232,7 +238,7 @@ const main = async () => {
                 fitFunction,
                 {
                     initialValues: avg,
-                    maxIterations: 1e5,
+                    maxIterations: 1e4,
                     damping: 1e-25,
                     gradientDifference: 1e-11,
                 }
@@ -244,35 +250,32 @@ const main = async () => {
                 result.parameterValues[2]
             ).toLatLon();
 
-            let success = true;
-            try {
-                prisma.computed_data.create({
-                    data: {
-                        timestamp,
-                        latititude: cartesian.lat,
-                        longitude: cartesian.lon,
-                        tag_id: tag as string,
-                        possible_depth: 159 - cartesian.height,
-                    },
-                });
-            } catch (err) {
-                success = false;
-                console.error(
-                    `CREATION OF COMPUTED DATA ENTRY FAILED AT: ${timestamp}\nERROR: ${err}`
-                );
-            }
+            newComputedDataArray.push({
+                timestamp,
+                latititude: cartesian.lat,
+                longitude: cartesian.lon,
+                tag_id: tag as string,
+                possible_depth: 159 - cartesian.height,
+            });
+            progress.tick();
+        }
 
-            if (success) {
-                try {
-                    prisma.data_and_node_relations.createMany({
-                        data: relationData,
-                    });
-                } catch (err) {
-                    console.error(
-                        `CREATION OF DATA RELATION ENTRY FAILED AT: ${timestamp}\nERROR: ${err}`
-                    );
-                }
-            }
+        try {
+            await prisma.computed_data.createMany({
+                data: newComputedDataArray,
+            });
+        } catch (err) {
+            console.error(
+                ` CREATION OF COMPUTED DATA ENTRY FAILED\nERROR: ${err}`
+            );
+        }
+
+        try {
+            await prisma.data_and_node_relations.createMany({
+                data: relationData,
+            });
+        } catch (err) {
+            console.error(`CREATION OF DATA RELATION FAILED\nERROR: ${err}`);
         }
     }
 };
